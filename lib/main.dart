@@ -38,7 +38,7 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               CheckboxListTile(
-                title: Text("Binnen bebouwde kom"),
+                title: const Text("Binnen bebouwde kom"),
                 value: binnenBebouwdeKom,
                 onChanged: (bool? value) {
                   setState(() {
@@ -51,7 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
               ),
               CheckboxListTile(
-                title: Text("Buiten bebouwde kom"),
+                title: const Text("Buiten bebouwde kom"),
                 value: buitenBebouwdeKom,
                 onChanged: (bool? value) {
                   setState(() {
@@ -64,7 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
               ),
               CheckboxListTile(
-                title: Text("Snelweg"),
+                title: const Text("Snelweg"),
                 value: snelweg,
                 onChanged: (bool? value) {
                   setState(() {
@@ -77,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
               ),
               TextField(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: "Snelheid in km/u",
                 ),
                 keyboardType: TextInputType.number,
@@ -87,13 +87,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   });
                 },
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
                   setState(() {});
                 },
-                child: Text("Instellingen opslaan"),
+                child: const Text("Instellingen opslaan"),
               ),
             ],
           ),
@@ -106,14 +106,15 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Speeding Fine Calculator'),
+        title: const Text('Speeding Fine Calculator'),
       ),
       body: Center(
         child: FineCircle(fineAmount: _calculateFine()),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _openSettings,
-        child: Icon(Icons.settings),
+        backgroundColor: Colors.blue, // Maak de FAB blauw
+        child: const Icon(Icons.settings),
       ),
     );
   }
@@ -160,8 +161,29 @@ class _MyHomePageState extends State<MyHomePage> {
       } else {
         return double.infinity; // Meer dan 30 km/h: strafbeschikking
       }
+    } else if (snelweg) {
+      // Bereken de overtreding (snelheid boven de limiet van 100 km/h)
+      double overtreding = snelheid - 100;
+      if (overtreding <= 0) {
+        return 0.0; // Geen overtreding
+      } else if (overtreding <= 5) {
+        return 32.0;
+      } else if (overtreding <= 10) {
+        return 79.0;
+      } else if (overtreding <= 15) {
+        return 150.0;
+      } else if (overtreding <= 20) {
+        return 216.0;
+      } else if (overtreding <= 25) {
+        return 287.0;
+      } else if (overtreding <= 30) {
+        return 368.0;
+      } else if (overtreding <= 35) {
+        return 495.0;
+      } else {
+        return double.infinity; // Meer dan 40 km/h: strafbeschikking
+      }
     }
-    // Andere situaties (bijvoorbeeld snelweg) kunnen later worden toegevoegd
     return 0.0;
   }
 }
@@ -174,9 +196,9 @@ class FineCircle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200, // Diameter van de cirkel
-      height: 200,
-      decoration: BoxDecoration(
+      width: 300, // Diameter van de cirkel
+      height: 300,
+      decoration: const BoxDecoration(
         color: Colors.blue,
         shape: BoxShape.circle,
       ),
@@ -185,9 +207,9 @@ class FineCircle extends StatelessWidget {
           fineAmount == double.infinity
               ? 'Strafbeschikking'
               : '€${fineAmount.toStringAsFixed(2)}',
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white,
-            fontSize: 24,
+            fontSize: 54,
             fontWeight: FontWeight.bold,
           ),
         ),
