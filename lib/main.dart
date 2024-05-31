@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 void main() {
   runApp(MyApp());
@@ -27,6 +28,59 @@ class _MyHomePageState extends State<MyHomePage> {
   bool buitenBebouwdeKom = false;
   bool snelweg = false;
   double snelheid = 0.0;
+  String status = 'Snelheid niet beschikbaar';
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentSpeed();
+  }
+
+  Future<void> _getCurrentSpeed() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Controleer of locatie services aan staan
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      setState(() {
+        status = 'Locatieservices staan uit';
+      });
+      return;
+    }
+
+    // Controleer permissies
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        setState(() {
+          status = 'Locatie permissies geweigerd';
+        });
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      setState(() {
+        status = 'Locatie permissies permanent geweigerd';
+      });
+      return;
+    }
+
+    // Start het ophalen van de snelheid
+    Geolocator.getPositionStream(
+      locationSettings: LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10,
+      ),
+    ).listen((Position position) {
+      setState(() {
+        snelheid = position.speed * 3.6; // m/s naar km/h
+        status = 'Snelheid: ${snelheid.toStringAsFixed(2)} km/h';
+      });
+    });
+  }
 
   void _openSettings() {
     showModalBottomSheet(
@@ -76,17 +130,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   });
                 },
               ),
-              TextField(
-                decoration: const InputDecoration(
-                  labelText: "Snelheid in km/u",
-                ),
-                keyboardType: TextInputType.number,
-                onChanged: (String value) {
-                  setState(() {
-                    snelheid = double.tryParse(value) ?? 0.0;
-                  });
-                },
-              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
@@ -109,7 +152,12 @@ class _MyHomePageState extends State<MyHomePage> {
         title: const Text('Speeding Fine Calculator'),
       ),
       body: Center(
-        child: FineCircle(fineAmount: _calculateFine()),
+        child: snelheid > 30
+            ? FineCircle(fineAmount: _calculateFine())
+            : Text(
+                status,
+                style: const TextStyle(fontSize: 24),
+              ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _openSettings,
@@ -120,13 +168,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   double _calculateFine() {
-    // Controleer of de gebruiker binnen bebouwde kom rijdt
+    if (snelheid <= 30) {
+      return 0.0; // Geen boete als de snelheid 30 km/h of minder is
+    }
+
     if (binnenBebouwdeKom) {
       // Bereken de overtreding (snelheid boven de limiet van 30 km/h)
       double overtreding = snelheid - 30;
-      if (overtreding <= 0) {
-        return 0.0; // Geen overtreding
-      } else if (overtreding <= 5) {
+      if (overtreding <= 5) {
         return 43.0;
       } else if (overtreding <= 10) {
         return 90.0;
@@ -144,9 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
     } else if (buitenBebouwdeKom) {
       // Bereken de overtreding (snelheid boven de limiet van 50 km/h)
       double overtreding = snelheid - 50;
-      if (overtreding <= 0) {
-        return 0.0; // Geen overtreding
-      } else if (overtreding <= 5) {
+      if (overtreding <= 5) {
         return 39.0;
       } else if (overtreding <= 10) {
         return 84.0;
@@ -164,9 +211,7 @@ class _MyHomePageState extends State<MyHomePage> {
     } else if (snelweg) {
       // Bereken de overtreding (snelheid boven de limiet van 100 km/h)
       double overtreding = snelheid - 100;
-      if (overtreding <= 0) {
-        return 0.0; // Geen overtreding
-      } else if (overtreding <= 5) {
+      if (overtreding <= 5) {
         return 32.0;
       } else if (overtreding <= 10) {
         return 79.0;
