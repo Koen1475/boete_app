@@ -252,11 +252,27 @@ class FineCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Color backgroundColor;
+    Color textColor;
+
+    // Bepaal de achtergrondkleur op basis van de hoogte van de boete
+    if (fineAmount < 75) {
+      backgroundColor = Colors.yellow;
+    } else if (fineAmount >= 75 && fineAmount <= 150) {
+      backgroundColor = Colors.orange;
+    } else {
+      backgroundColor = Colors.red;
+    }
+
+    // Bepaal de tekstkleur op basis van de achtergrondkleur
+    textColor =
+        backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+
     return Container(
       width: 300, // Diameter van de cirkel
       height: 300,
-      decoration: const BoxDecoration(
-        color: Colors.blue,
+      decoration: BoxDecoration(
+        color: backgroundColor,
         shape: BoxShape.circle,
       ),
       child: Center(
@@ -264,8 +280,8 @@ class FineCircle extends StatelessWidget {
           fineAmount == double.infinity
               ? 'Strafbeschikking'
               : '€${fineAmount.toStringAsFixed(2)}',
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: textColor,
             fontSize: 54,
             fontWeight: FontWeight.bold,
           ),
